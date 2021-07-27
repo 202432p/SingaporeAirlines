@@ -11,7 +11,7 @@ from cryptography.fernet import Fernet
 
 from Forms import CreateEmployeeForm, CreateEmployerForm, CreateListingForm, CreateAirplanesForm, CreatePassengerForm, \
     CreateFlightForm, CreateMaintenanceForm, RegisterForm, LoginForm, FilterStatus, FilterRole, ChangePassword, \
-    BookTicketForm, ForgetPassword
+    BookTicketForm, ForgetPassword, ForgetPassword2
 
 from datetime import date, datetime
 
@@ -25,7 +25,7 @@ app.secret_key = 'any_random_string'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_PASSWORD'] = 'Cloud9meowskifi'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -1993,6 +1993,7 @@ def login():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
         customer = cursor.fetchone()
+        print(customer)
         if customer:
             hashAndSalt = customer['password']
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
@@ -2039,23 +2040,24 @@ def logout():
 def register():
     msg = ''
     register_form = RegisterForm(request.form)
-    if request.method == 'POST' and 'username' in register_form and 'password' in register_form and 'email' in register_form and 'confirm' in register_form and register_form.validate():
+    if request.method == 'POST' and register_form.validate():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
         confirm = request.form['confirm']
+
         if password == confirm:
             salt = bcrypt.gensalt(rounds=16)
             hash_password = bcrypt.hashpw(password.encode(), salt)
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s)',(username, hash_password, email, "Some Keys"))
+            cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s)', (username, hash_password, email, "Some Keys"))
             #cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)',(username, password, email, "Some Keys"))
             mysql.connection.commit()
             msg = 'You have successfully registered!'
 
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
             customer = cursor.fetchone()
+            print(customer)
             if customer:
                 hashAndSalt = customer['password']
                 if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
@@ -2069,17 +2071,55 @@ def register():
             print('The passwords are not the same') #Make a notification of this message, this is printed in python right now
     return render_template('register.html', form=register_form)
 
+#@app.route('/forgetPassword', methods=['GET', 'POST'])
+#def forgetpassword():
+#    forgetpassword_form = ForgetPassword(request.form)
+#    if request.method == 'POST' and forgetpassword_form.validate():
+#        employees_dict = {'Anthony': 'password', 'Benny': 'password', 'Jumbo': 'password', 'Catherine': 'password'}
+#        if forgetpassword_form.login_id.data in employees_dict:
+#            print('Valid')
+#            return redirect(url_for('home'))
+#        else:
+#            print('Invalid')
+#    return render_template('forgetPassword.html', form=forgetpassword_form)
+
+
 @app.route('/forgetPassword', methods=['GET', 'POST'])
 def forgetpassword():
     forgetpassword_form = ForgetPassword(request.form)
     if request.method == 'POST' and forgetpassword_form.validate():
-        employees_dict = {'Anthony': 'password', 'Benny': 'password', 'Jumbo': 'password', 'Catherine': 'password'}
-        if forgetpassword_form.login_id.data in employees_dict:
-            print('Valid')
-            return redirect(url_for('home'))
+        username = request.form['login_id']
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT username FROM customer WHERE username = %s', (username,))
+        customer = cursor.fetchone()
+        print(customer)
+        if customer:
+            session['username'] = username
+            print('Customer exist')
+            return redirect(url_for('forgetpassword2'))
         else:
-            print('Invalid')
+            print('Customer does not exist')
+
     return render_template('forgetPassword.html', form=forgetpassword_form)
+
+@app.route('/forgetPassword2', methods=['GET', 'POST'])
+def forgetpassword2():
+    forgetpassword2_form = ForgetPassword2(request.form)
+    if request.method == 'POST' and forgetpassword2_form.validate():
+        password = request.form['password']
+        confirm = request.form['confirm']
+
+        if password == confirm:
+            salt = bcrypt.gensalt(rounds=16)
+            hash_password = bcrypt.hashpw(password.encode(), salt)
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('UPDATE customer set password = %s WHERE username = %s', (hash_password, session['username']))
+            mysql.connection.commit()
+            session.pop('username', None)
+            return redirect(url_for('login'))
+
+    return render_template('forgetPassword2.html', form=forgetpassword2_form)
 
 
 @app.errorhandler(404)

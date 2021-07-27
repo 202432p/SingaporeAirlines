@@ -173,9 +173,7 @@ class BookTicketForm(Form):
 class RegisterForm(Form):
     username = StringField('Username', [validators.DataRequired(), validators.Length(min=1, max=150)])
     email = StringField('E-mail', [validators.DataRequired(), validators.Length(min=1, max=150)])
-    password = StringField('Password',
-                           [validators.DataRequired(), validators.EqualTo('confirm')],
-                           widget=PasswordInput(hide_value=False))
+    password = StringField('Password',  [validators.DataRequired(), validators.EqualTo('confirm')],  widget=PasswordInput(hide_value=False))
     confirm = StringField('Confirm Password', [validators.DataRequired()] , widget=PasswordInput(hide_value=False) )
 
 
@@ -186,6 +184,11 @@ class LoginForm(Form):
 
 class ForgetPassword(Form):
     login_id = StringField('Login id', [validators.DataRequired(), validators.Length(min=1, max=150)])
+
+
+class ForgetPassword2(Form):
+    password = StringField('Password', [validators.DataRequired(), validators.EqualTo('confirm')], widget=PasswordInput(hide_value=False))
+    confirm = StringField('Confirm Password', [validators.DataRequired()] , widget=PasswordInput(hide_value=False) )
 
 
 class FilterStatus(Form):

@@ -176,7 +176,7 @@ class RegisterForm(Form):
     password = StringField('Password',
                            [validators.DataRequired(), validators.EqualTo('confirm')],
                            widget=PasswordInput(hide_value=False))
-    confirm = StringField('Repeat Password' , [validators.DataRequired()] , widget=PasswordInput(hide_value=False) )
+    confirm = StringField('Confirm Password', [validators.DataRequired()] , widget=PasswordInput(hide_value=False) )
 
 
 class LoginForm(Form):

@@ -92,7 +92,7 @@ def user_home():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM customer WHERE id = %s', (session['id'],))
         customer = cursor.fetchone()
-        return render_template('user.html', customer = customer)
+        return render_template('user.html', customer=customer)
     return redirect(url_for('login'))
 
 @app.route('/adminHome')
@@ -2051,8 +2051,22 @@ def register():
             cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s)',(username, hash_password, email, "Some Keys"))
             #cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)',(username, password, email, "Some Keys"))
             mysql.connection.commit()
-            msg = 'You have successfully registered! Hello'
-        return redirect(url_for('retrieve_passengers'))
+            msg = 'You have successfully registered!'
+
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
+            customer = cursor.fetchone()
+            if customer:
+                hashAndSalt = customer['password']
+                if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
+                    # Create session data, we can access this data in other routes
+                    session['loggedin'] = True
+                    session['id'] = customer['id']
+                    session['username'] = customer['username']
+                # return 'Logged in successfully!'
+                return redirect(url_for('user_home'))
+        else:
+            print('The passwords are not the same') #Make a notification of this message, this is printed in python right now
     return render_template('register.html', form=register_form)
 
 @app.route('/forgetPassword', methods=['GET', 'POST'])

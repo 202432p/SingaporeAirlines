@@ -2051,7 +2051,7 @@ def register():
             cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s)',(username, hash_password, email, "Some Keys"))
             #cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)',(username, password, email, "Some Keys"))
             mysql.connection.commit()
-            msg = 'You have successfully registered!'
+            msg = 'You have successfully registered! Hello'
         return redirect(url_for('retrieve_passengers'))
     return render_template('register.html', form=register_form)
 

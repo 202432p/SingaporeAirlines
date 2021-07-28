@@ -193,7 +193,6 @@ class ForgetPassword(Form):
 class ForgetPassword2(Form):
     password = StringField('Password', [validators.DataRequired(), validators.EqualTo('confirm')], widget=PasswordInput(hide_value=False))
     confirm = StringField('Confirm Password', [validators.DataRequired()] , widget=PasswordInput(hide_value=False) )
-    recaptcha = RecaptchaField()
 
 
 class FilterStatus(Form):

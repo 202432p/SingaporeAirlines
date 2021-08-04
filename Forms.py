@@ -180,7 +180,7 @@ class RegisterForm(Form):
 
 
 class LoginForm(Form):
-    login_id = StringField('Login id', [validators.DataRequired(), validators.Length(min=1, max=150)])
+    username = StringField('Username', [validators.DataRequired(), validators.Length(min=1, max=150)])
     password = StringField('Password', [validators.DataRequired()], widget=PasswordInput(hide_value=False))
     recaptcha = RecaptchaField()
 

@@ -29,7 +29,7 @@ app.config['RECAPTCHA_PRIVATE_KEY'] = '6LfgRjMbAAAAAJ3oWWbsFfB4Wh3ojAaAtZwZSsW_'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Fccfxx322399'
+app.config['MYSQL_PASSWORD'] = 'Cloud9meowskifi'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -92,7 +92,6 @@ def home():
 
 @app.route('/userHome')
 def user_home():
-    session['loggedin'] = True
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM customer WHERE id = %s', (session['id'],))
@@ -1990,7 +1989,6 @@ def retrieve_management():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    msg=''
     login_form = LoginForm(request.form)
     if request.method == 'POST' and login_form.validate():
         username = request.form['username']
@@ -1999,7 +1997,7 @@ def login():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
         customer = cursor.fetchone()
-        # print(customer)
+        print(customer)
         if customer:
             hashAndSalt = customer['password']
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
@@ -2010,7 +2008,7 @@ def login():
             # return 'Logged in successfully!'
             return redirect(url_for('user_home'))
         else:
-            flash("Please check your login details and try again.")
+            flash('Please check your login details and try again.')
     return render_template('login.html', form=login_form)
 
 # @app.route('/logout')

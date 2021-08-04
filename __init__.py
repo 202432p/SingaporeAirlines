@@ -29,7 +29,7 @@ app.config['RECAPTCHA_PRIVATE_KEY'] = '6LfgRjMbAAAAAJ3oWWbsFfB4Wh3ojAaAtZwZSsW_'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Cloud9meowskifi'
+app.config['MYSQL_PASSWORD'] = 'Fccfxx322399'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -94,7 +94,7 @@ def home():
 def user_home():
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM customer WHERE id = %s', (session['id'],))
+        cursor.execute('SELECT * FROM customer WHERE customer_id = %s', (session['customer_id'],))
         customer = cursor.fetchone()
         return render_template('user.html', customer=customer)
     return redirect(url_for('login'))
@@ -2003,7 +2003,7 @@ def login():
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
                 # Create session data, we can access this data in other routes
                 session['loggedin'] = True
-                session['id'] = customer['id']
+                session['customer_id'] = customer['customer_id']
                 session['username'] = customer['username']
             # return 'Logged in successfully!'
             return redirect(url_for('user_home'))
@@ -2067,7 +2067,7 @@ def register():
                 if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
                     # Create session data, we can access this data in other routes
                     session['loggedin'] = True
-                    session['id'] = customer['id']
+                    session['customer_id'] = customer['customer_id']
                     session['username'] = customer['username']
                 # return 'Logged in successfully!'
                 return redirect(url_for('user_home'))

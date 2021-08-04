@@ -29,7 +29,7 @@ app.config['RECAPTCHA_PRIVATE_KEY'] = '6LfgRjMbAAAAAJ3oWWbsFfB4Wh3ojAaAtZwZSsW_'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Fccfxx322399'
+app.config['MYSQL_PASSWORD'] = 'Saythename17'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -1449,52 +1449,80 @@ def retrieve_passengers():
         return render_template('retrieveCustomer.html', count=len(passengers_list), passengers_list=passengers_list)
 
 
-@app.route('/updatePassenger/<int:id>/', methods=['GET', 'POST'])
-def update_customer(id):
+# @app.route('/updatePassenger/<int:id>/', methods=['GET', 'POST'])
+# def update_customer(id):
+#     update_customer_form = CreatePassengerForm(request.form)
+#     if request.method == 'POST' and update_customer_form.validate():
+#
+#         passengers_dict = {}
+#         db = shelve.open('passenger.db', 'w')
+#         passengers_dict = db['Passengers']
+#
+#         passenger = passengers_dict.get(id)
+#         passenger.set_first_name(update_customer_form.first_name.data)
+#         passenger.set_last_name(update_customer_form.last_name.data)
+#         passenger.set_nric(update_customer_form.nric.data)
+#         passenger.set_phone_no(update_customer_form.phone_no.data)
+#         passenger.set_flight_no(update_customer_form.flight_no.data)
+#         passenger.set_seat_no(update_customer_form.seat_no.data)
+#         passenger.set_email(update_customer_form.email.data)
+#         passenger.set_gender(update_customer_form.gender.data)
+#         passenger.set_health_declaration(update_customer_form.health_declaration.data)
+#         passenger.set_pcr_test(update_customer_form.pcr_test.data)
+#         passenger.set_pre_book(update_customer_form.pre_book.data)
+#         passenger.set_remarks(update_customer_form.remarks.data)
+#
+#         db['Passengers'] = passengers_dict
+#         db.close()
+#         return redirect(url_for('user_home'))
+#     else:
+#         passengers_dict = {}
+#         db = shelve.open('passenger.db', 'r')
+#         passengers_dict = db['Passengers']
+#         db.close()
+#
+#         passenger = passengers_dict.get(id)
+#         update_customer_form.first_name.data = passenger.get_first_name()
+#         update_customer_form.last_name.data = passenger.get_last_name()
+#         update_customer_form.nric.data = passenger.get_nric()
+#         update_customer_form.phone_no.data = passenger.get_phone_no()
+#         update_customer_form.email.data = passenger.get_email()
+#         update_customer_form.flight_no.data = passenger.get_flight_no()
+#         update_customer_form.seat_no.data = passenger.get_seat_no()
+#         update_customer_form.gender.data = passenger.get_gender()
+#         update_customer_form.health_declaration.data = passenger.get_health_declaration()
+#         update_customer_form.pcr_test.data = passenger.get_pcr_test()
+#         update_customer_form.pre_book.data = passenger.get_pre_book()
+#         update_customer_form.remarks.data = passenger.get_remarks()
+#
+#         return render_template('updateCustomer.html', form=update_customer_form)
+
+
+@app.route('/updatePassenger/', methods=['GET', 'POST'])
+def update_customer():
+    print(session)
     update_customer_form = CreatePassengerForm(request.form)
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    #cursor.execute('SELECT * FROM customer WHERE id = %s', (session['id']))
+    # select from db and then print it out in the form
+
     if request.method == 'POST' and update_customer_form.validate():
-        passengers_dict = {}
-        db = shelve.open('passenger.db', 'w')
-        passengers_dict = db['Passengers']
-
-        passenger = passengers_dict.get(id)
-        passenger.set_first_name(update_customer_form.first_name.data)
-        passenger.set_last_name(update_customer_form.last_name.data)
-        passenger.set_nric(update_customer_form.nric.data)
-        passenger.set_phone_no(update_customer_form.phone_no.data)
-        passenger.set_flight_no(update_customer_form.flight_no.data)
-        passenger.set_seat_no(update_customer_form.seat_no.data)
-        passenger.set_email(update_customer_form.email.data)
-        passenger.set_gender(update_customer_form.gender.data)
-        passenger.set_health_declaration(update_customer_form.health_declaration.data)
-        passenger.set_pcr_test(update_customer_form.pcr_test.data)
-        passenger.set_pre_book(update_customer_form.pre_book.data)
-        passenger.set_remarks(update_customer_form.remarks.data)
-
-        db['Passengers'] = passengers_dict
-        db.close()
+        print('meow1')
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        nric = request.form['nric']
+        phone_no = request.form['phone_no']
+        email = request.form['email']
+        gender = request.form['gender']
+        health_declaration = request.form['health_declaration']
+        pcr_test = request.form['pcr_test']
+        pre_book = request.form['pre_book']
+        cursor.execute('UPDATE customer SET gender=%s , first_name=%s , last_name=%s , health_declaration=%s , pcr_test=%s , pre_book=%s , NRIC=%s , email=%s , phone_no=%s WHERE customer_id=%s',(gender, first_name, last_name, health_declaration, pcr_test, pre_book, nric, email, phone_no, session['customer_id']))
+        print('meow')
+        mysql.connection.commit()
         return redirect(url_for('user_home'))
-    else:
-        passengers_dict = {}
-        db = shelve.open('passenger.db', 'r')
-        passengers_dict = db['Passengers']
-        db.close()
 
-        passenger = passengers_dict.get(id)
-        update_customer_form.first_name.data = passenger.get_first_name()
-        update_customer_form.last_name.data = passenger.get_last_name()
-        update_customer_form.nric.data = passenger.get_nric()
-        update_customer_form.phone_no.data = passenger.get_phone_no()
-        update_customer_form.email.data = passenger.get_email()
-        update_customer_form.flight_no.data = passenger.get_flight_no()
-        update_customer_form.seat_no.data = passenger.get_seat_no()
-        update_customer_form.gender.data = passenger.get_gender()
-        update_customer_form.health_declaration.data = passenger.get_health_declaration()
-        update_customer_form.pcr_test.data = passenger.get_pcr_test()
-        update_customer_form.pre_book.data = passenger.get_pre_book()
-        update_customer_form.remarks.data = passenger.get_remarks()
-
-        return render_template('updateCustomer.html', form=update_customer_form)
+    return render_template('updateCustomer.html', form=update_customer_form)
 
 
 @app.route('/deletePassenger/<int:id>', methods=['POST'])
@@ -1990,7 +2018,7 @@ def retrieve_management():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
-    if request.method == 'POST' and login_form.validate():
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         username = request.form['username']
         password = request.form['password']
 
@@ -2003,12 +2031,12 @@ def login():
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
                 # Create session data, we can access this data in other routes
                 session['loggedin'] = True
-                session['customer_id'] = customer['customer_id']
+                session['id'] = customer['id']
                 session['username'] = customer['username']
             # return 'Logged in successfully!'
             return redirect(url_for('user_home'))
         else:
-            flash('Please check your login details and try again.')
+            msg = 'Incorrect username/password!'
     return render_template('login.html', form=login_form)
 
 # @app.route('/logout')
@@ -2070,7 +2098,7 @@ def register():
                     session['customer_id'] = customer['customer_id']
                     session['username'] = customer['username']
                 # return 'Logged in successfully!'
-                return redirect(url_for('user_home'))
+                return redirect(url_for('update_customer'))
         else:
             print('The passwords are not the same') #Make a notification of this message, this is printed in python right now
     return render_template('register.html', form=register_form)

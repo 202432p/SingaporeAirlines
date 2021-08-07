@@ -123,14 +123,12 @@ class CreatePassengerForm(Form):
     phone_no = StringField('Phone Number',
                            [validators.Length(min=1, max=8), validators.DataRequired(), validate_mobile_phone])
     email = StringField('Email', [validators.Length(min=1, max=150), validators.DataRequired(), Email()])
-    # flight_no = StringField('Flight No.', [validators.Length(min=1, max=5), validators.DataRequired()])
-    # seat_no = StringField('Seat No.', [validators.Length(min=1, max=5), validators.DataRequired()])
     gender = SelectField('Gender', [validators.DataRequired()],
                          choices=[('', 'Select'), ('F', 'Female'), ('M', 'Male')], default='')
     health_declaration = RadioField('Health Declaration', choices=[('N', 'No'), ('Y', 'Yes'), ], default='N')
     pcr_test = RadioField('PCR Test', choices=[('N', 'No'), ('Y', 'Yes'), ], default='N')
     pre_book = RadioField('Pre-booked PCR Test', choices=[('N', 'No'), ('Y', 'Yes'), ], default='N')
-    # remarks = TextAreaField('Remarks', [validators.Optional()])
+
 
 
 class CreateFlightForm(Form):

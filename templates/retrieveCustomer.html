@@ -42,7 +42,7 @@
         <td>{{ passenger.get_flight_no() }}</td>
         <td>{{ passenger.get_seat_no() }}</td>
         <td>{% if passenger.get_health_declaration() == "N" or passenger.get_pcr_test() == "N" or passenger.get_pre_book() == "N" %}
-            <b><font color="red">Incompleted</font></b>
+            <b><font color="red"> Incompleted </font></b>
             {% else %}
             {% endif %} </td>
 

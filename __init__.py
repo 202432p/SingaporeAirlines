@@ -1503,9 +1503,7 @@ def update_customer():
     print(session)
     update_customer_form = CreatePassengerForm(request.form)
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    #cursor.execute('SELECT * FROM customer WHERE id = %s', (session['id']))
-    # select from db and then print it out in the form
-
+    
     if request.method == 'POST' and update_customer_form.validate():
         print('meow1')
         first_name = request.form['first_name']

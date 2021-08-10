@@ -2080,7 +2080,6 @@ def register():
             hash_password = bcrypt.hashpw(password.encode(), salt)
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s)', (username, hash_password, email, "Some Keys"))
-            #cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)',(username, password, email, "Some Keys"))
             mysql.connection.commit()
             msg = 'You have successfully registered!'
 

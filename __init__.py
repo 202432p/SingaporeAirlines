@@ -29,7 +29,7 @@ app.config['RECAPTCHA_PRIVATE_KEY'] = '6LfgRjMbAAAAAJ3oWWbsFfB4Wh3ojAaAtZwZSsW_'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Saythename17'
+app.config['MYSQL_PASSWORD'] = 'Fccfxx322399'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -2016,14 +2016,13 @@ def retrieve_management():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+    if request.method == 'POST' and login_form.validate():
         username = request.form['username']
         password = request.form['password']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
         customer = cursor.fetchone()
-        print(customer)
         if customer:
             hashAndSalt = customer['password']
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
@@ -2150,6 +2149,13 @@ def forgetpassword2():
             return redirect(url_for('login'))
 
     return render_template('forgetPassword2.html', form=forgetpassword2_form)
+
+
+# def PasswordHistory():
+#     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+#     cursor.execute('INSERT INTO PasswordHistory (customer_id, password) SELECT customer_id, password FROM customer')
+#     mysql.connection.commit()
+
 
 
 @app.errorhandler(404)

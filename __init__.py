@@ -2034,7 +2034,7 @@ def login():
             # return 'Logged in successfully!'
             return redirect(url_for('user_home'))
         else:
-            msg = 'Incorrect username/password!'
+            flash('Incorrect username or password.')
     return render_template('login.html', form=login_form)
 
 # @app.route('/logout')

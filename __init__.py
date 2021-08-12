@@ -29,10 +29,11 @@ app.config['RECAPTCHA_PRIVATE_KEY'] = '6LfgRjMbAAAAAJ3oWWbsFfB4Wh3ojAaAtZwZSsW_'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Fccfxx322399'
+app.config['MYSQL_PASSWORD'] = 'Cat1goesmeow'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
+
 
 @app.before_request
 def before_request():
@@ -98,6 +99,7 @@ def user_home():
         customer = cursor.fetchone()
         return render_template('user.html', customer=customer)
     return redirect(url_for('login'))
+
 
 @app.route('/adminHome')
 def admin_home():
@@ -2016,24 +2018,25 @@ def retrieve_management():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
-    if request.method == 'POST' and login_form.validate():
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         username = request.form['username']
         password = request.form['password']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
         customer = cursor.fetchone()
+        #print(customer)
         if customer:
             hashAndSalt = customer['password']
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
                 # Create session data, we can access this data in other routes
                 session['loggedin'] = True
-                session['customer_id'] = customer['customer_id']
+                session['id'] = customer['customer_id']
                 session['username'] = customer['username']
             # return 'Logged in successfully!'
             return redirect(url_for('user_home'))
         else:
-            flash('Incorrect username or password.')
+            msg = 'Incorrect username/password!'
     return render_template('login.html', form=login_form)
 
 # @app.route('/logout')
@@ -2045,6 +2048,7 @@ def login():
 #     else:
 #         return '<p>user already logged out</p>' and render_template('index.html')
 #     print(g.user)
+
 
 @app.route('/logout')
 def logout():
@@ -2064,6 +2068,7 @@ def logout():
 #         else:
 #             return redirect(url_for('/'))
 #     return render_template('register.html', form=register_form)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -2099,6 +2104,7 @@ def register():
             print('The passwords are not the same') #Make a notification of this message, this is printed in python right now
     return render_template('register.html', form=register_form)
 
+
 #@app.route('/forgetPassword', methods=['GET', 'POST'])
 #def forgetpassword():
 #    forgetpassword_form = ForgetPassword(request.form)
@@ -2131,6 +2137,7 @@ def forgetpassword():
 
     return render_template('forgetPassword.html', form=forgetpassword_form)
 
+
 @app.route('/forgetPassword2', methods=['GET', 'POST'])
 def forgetpassword2():
     forgetpassword2_form = ForgetPassword2(request.form)
@@ -2150,17 +2157,10 @@ def forgetpassword2():
     return render_template('forgetPassword2.html', form=forgetpassword2_form)
 
 
-# def PasswordHistory():
-#     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#     cursor.execute('INSERT INTO PasswordHistory (customer_id, password) SELECT customer_id, password FROM customer')
-#     mysql.connection.commit()
-
-
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('error404.html'), 404
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(ssl_context='adhoc')

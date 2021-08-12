@@ -2018,7 +2018,7 @@ def retrieve_management():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+    if request.method == 'POST' and login_form.validate():
         username = request.form['username']
         password = request.form['password']
 
@@ -2031,12 +2031,12 @@ def login():
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
                 # Create session data, we can access this data in other routes
                 session['loggedin'] = True
-                session['id'] = customer['customer_id']
+                session['customer_id'] = customer['customer_id']
                 session['username'] = customer['username']
             # return 'Logged in successfully!'
             return redirect(url_for('user_home'))
         else:
-            msg = 'Incorrect username/password!'
+            flash('Incorrect username or password.')
     return render_template('login.html', form=login_form)
 
 # @app.route('/logout')

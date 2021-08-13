@@ -14,7 +14,7 @@ from Forms import CreateEmployeeForm, CreateEmployerForm, CreateListingForm, Cre
     CreateFlightForm, CreateMaintenanceForm, RegisterForm, LoginForm, FilterStatus, FilterRole, ChangePassword, \
     BookTicketForm, ForgetPassword, ForgetPassword2
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from werkzeug.utils import secure_filename
 
@@ -25,11 +25,11 @@ app.config['UPLOAD_PATH'] = 'static/employer_logo'
 app.secret_key = 'any_random_string'
 app.config['RECAPTCHA_PUBLIC_KEY'] = '6LfgRjMbAAAAAFB5kW4klbRpXJPT8ijgxO0FEP-p'
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LfgRjMbAAAAAJ3oWWbsFfB4Wh3ojAaAtZwZSsW_'
-
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Cat1goesmeow'
+app.config['MYSQL_PASSWORD'] = 'Saythename17'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -1502,7 +1502,7 @@ def retrieve_passengers():
 
 @app.route('/updatePassenger/', methods=['GET', 'POST'])
 def update_customer():
-    print(session)
+
     update_customer_form = CreatePassengerForm(request.form)
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
@@ -2033,6 +2033,7 @@ def login():
                 session['loggedin'] = True
                 session['customer_id'] = customer['customer_id']
                 session['username'] = customer['username']
+                session.permanent = True
             # return 'Logged in successfully!'
             return redirect(url_for('user_home'))
         else:
@@ -2101,7 +2102,7 @@ def register():
                 # return 'Logged in successfully!'
                 return redirect(url_for('update_customer'))
         else:
-            print('The passwords are not the same') #Make a notification of this message, this is printed in python right now
+            flash('Passwords do not match.') #Make a notification of this message, this is printed in python right now
     return render_template('register.html', form=register_form)
 
 
@@ -2163,4 +2164,5 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    app.run(ssl_context='adhoc')
+    app.run()
+    # app.run(ssl_context='adhoc')

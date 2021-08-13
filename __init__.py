@@ -2164,5 +2164,5 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    app.run()
-    # app.run(ssl_context='adhoc')
+    # app.run()
+    app.run(ssl_context='adhoc')

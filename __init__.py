@@ -1947,7 +1947,6 @@ def login():
             hashAndSalt = customer['password']
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
                 # Create session data, we can access this data in other routes
-                session['loggedin'] = True
                 session['customer_id'] = customer['customer_id']
                 session['username'] = customer['username']
                 session.permanent = True
@@ -1958,30 +1957,6 @@ def login():
             flash('Incorrect username or password.')
     return render_template('login.html', form=login_form)
 
-
-# @app.route('/login/2fa/', methods=['GET', 'POST'])
-# def login_2fa():
-#     # getting secret key used by user
-#     print(session['customer_id'])
-#     usersecret = request.form.get("secret")
-#     # getting OTP provided by user
-#     otp = request.form.get("otp")
-#
-#     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#     cursor.execute('SELECT twofatoken FROM customer WHERE customer_id = %s', (session['customer_id']))
-#     secret = cursor.fetchone()
-#
-#     if request.method == 'POST':
-#         # verifying submitted OTP with PyOTP
-#         if pyotp.TOTP(usersecret).verify(str(otp)):
-#             # inform users if OTP is valid
-#             flash("The TOTP 2FA token is valid", "success")
-#             return redirect(url_for("user_home"))
-#         else:
-#             # inform users if OTP is invalid
-#             flash("You have supplied an invalid 2FA token!", "danger")
-#             return redirect(url_for("login_2fa"))
-#     return render_template('login_2fa.html', secret=secret)
 
 @app.route('/login/2fa/', methods=['GET', 'POST'])
 def login_2fa():
@@ -1996,6 +1971,7 @@ def login_2fa():
         otp = request.form.get('otp')
         if pyotp.TOTP(usersecret).verify(str(otp)):
             # inform users if OTP is valid
+            session['loggedin'] = True
             flash("The TOTP 2FA token is valid", "success")
             return redirect(url_for("user_home"))
         else:

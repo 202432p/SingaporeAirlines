@@ -4,6 +4,7 @@ import os
 import sys
 import MySQLdb.cursors
 import bcrypt
+import pyotp
 
 from flask import Flask, render_template, request, redirect, url_for, abort, send_from_directory, session, g, flash
 from flask_mysqldb import MySQL
@@ -29,7 +30,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Saythename17'
+app.config['MYSQL_PASSWORD'] = 'Cat1goesmeow'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -48,48 +49,6 @@ def before_request():
 def home():
     return render_template('index.html')
 
-
-# @app.route('/userHome')
-# def user_home():
-#     try:
-#         passengers_dict = {}
-#         db = shelve.open('passenger.db', 'r')
-#         passengers_dict = db['Passengers']
-#         db.close()
-#
-#         tickets_dict = {}
-#         db3 = shelve.open('ticket.db', 'r')
-#         tickets_dict = db3['Tickets']
-#         db3.close()
-#
-#         flights_dict = {}
-#         db2 = shelve.open('flight.db','r')
-#         flights_dict = db2['Flights']
-#         db2.close()
-#
-#     except IOError:
-#         print('Error in retrieving employers.db')
-#     except:
-#         print("Error in retrieving Employers from employers.db.")
-#     else:
-#         passengers_list = []
-#         tickets_list = []
-#         flights_list = []
-#         for key in passengers_dict:
-#             passenger = passengers_dict.get(key)
-#             # passengers_list.append(passenger)
-#             if passenger.get_nric() == 'S9733462E':  # (session id)
-#                 passengers_list.append(passenger)
-#
-#         for key in tickets_dict:
-#             ticket = tickets_dict.get(key)
-#             tickets_list.append(ticket)
-#
-#         for key in flights_dict:
-#             flight = flights_dict.get(key)
-#             flights_list.append(flight)
-#
-#         return render_template('user.html', passengers_list=passengers_list, tickets_list=tickets_list, flights_list=flights_list)
 
 @app.route('/userHome')
 def user_home():
@@ -1973,48 +1932,6 @@ def retrieve_management():
 #    return send_from_directory(app.config['UPLOAD_PATH'], filename)
 
 
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     login_form = LoginForm(request.form)
-#     if request.method == 'GET':
-#         print(session)
-#         session.pop('username', None)
-#         print(session)
-#     if request.method == 'POST' and login_form.validate():
-#         print(session)
-#         employees_dict = {'Anthony': 'password', 'Benny': 'password', 'Jumbo': 'password', 'Catherine': 'password'}
-#
-#         if request.form['login_id'] == 'Anthony' in employees_dict:
-#             if employees_dict['Anthony'] == request.form['password']:
-#                 session['username'] = request.form['login_id']
-#                 return redirect(url_for('user_home'))
-#             else:
-#                 flash("Incorrect user or password!")
-#         elif request.form['login_id'] == 'Benny' in employees_dict:
-#             if employees_dict['Benny'] == request.form['password']:
-#                 session['username'] = request.form['login_id']
-#                 return redirect(url_for('admin_home'))
-#             else:
-#                 flash("Incorrect user or password!")
-#         elif request.form['login_id'] == 'Jumbo' in employees_dict:
-#             if employees_dict['Jumbo'] == request.form['password']:
-#                 session['username'] = request.form['login_id']
-#                 return redirect(url_for('company_home'))
-#             else:
-#                 flash("Incorrect user or password!")
-#         elif request.form['login_id'] == 'Catherine' in employees_dict:
-#             if employees_dict['Catherine'] == request.form['password']:
-#                 session['username'] = request.form['login_id']
-#                 return redirect(url_for('employee_home'))
-#             else:
-#                 flash("Incorrect user or password!")
-#         else:
-#             flash("Incorrect user or password!")
-#     print(session)
-#     print(g.user)
-#     return render_template('login.html', form=login_form)
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
@@ -2025,7 +1942,7 @@ def login():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
         customer = cursor.fetchone()
-        #print(customer)
+
         if customer:
             hashAndSalt = customer['password']
             if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
@@ -2035,20 +1952,57 @@ def login():
                 session['username'] = customer['username']
                 session.permanent = True
             # return 'Logged in successfully!'
-            return redirect(url_for('user_home'))
+            # return redirect(url_for('user_home'))
+            return redirect(url_for('login_2fa'))
         else:
             flash('Incorrect username or password.')
     return render_template('login.html', form=login_form)
 
-# @app.route('/logout')
-# def logout():
-#     if 'username' in session:
-#         session.pop('username', None)
-#         flash("You have logged out")
-#         return render_template('logout.html')
-#     else:
-#         return '<p>user already logged out</p>' and render_template('index.html')
-#     print(g.user)
+
+# @app.route('/login/2fa/', methods=['GET', 'POST'])
+# def login_2fa():
+#     # getting secret key used by user
+#     print(session['customer_id'])
+#     usersecret = request.form.get("secret")
+#     # getting OTP provided by user
+#     otp = request.form.get("otp")
+#
+#     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+#     cursor.execute('SELECT twofatoken FROM customer WHERE customer_id = %s', (session['customer_id']))
+#     secret = cursor.fetchone()
+#
+#     if request.method == 'POST':
+#         # verifying submitted OTP with PyOTP
+#         if pyotp.TOTP(usersecret).verify(str(otp)):
+#             # inform users if OTP is valid
+#             flash("The TOTP 2FA token is valid", "success")
+#             return redirect(url_for("user_home"))
+#         else:
+#             # inform users if OTP is invalid
+#             flash("You have supplied an invalid 2FA token!", "danger")
+#             return redirect(url_for("login_2fa"))
+#     return render_template('login_2fa.html', secret=secret)
+
+@app.route('/login/2fa/', methods=['GET', 'POST'])
+def login_2fa():
+    print(session['customer_id'])
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT twofatoken FROM customer WHERE customer_id = %s', (str(session['customer_id'])))
+    secret = cursor.fetchone()
+    print(secret['twofatoken'])
+
+    if request.method == 'POST':
+        usersecret = request.form.get('secret')
+        otp = request.form.get('otp')
+        if pyotp.TOTP(usersecret).verify(str(otp)):
+            # inform users if OTP is valid
+            flash("The TOTP 2FA token is valid", "success")
+            return redirect(url_for("user_home"))
+        else:
+            # inform users if OTP is invalid
+            flash("You have supplied an invalid 2FA token!", "danger")
+            return redirect(url_for("login_2fa"))
+    return render_template('login_2fa.html', secret=secret)
 
 
 @app.route('/logout')
@@ -2057,18 +2011,6 @@ def logout():
     session.pop('id', None)
     session.pop('username', None)
     return redirect(url_for('login'))
-
-# @app.route('/register', methods=['GET', 'POST'])
-# def register():
-#     register_form = RegisterForm(request.form)
-#     if request.method == 'POST' and register_form.validate():
-#         if register_form.type.data == 'P':
-#             return redirect(url_for('create_passenger'))
-#         elif register_form.type.data == 'Er':
-#             return redirect(url_for('create_employer'))
-#         else:
-#             return redirect(url_for('/'))
-#     return render_template('register.html', form=register_form)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -2080,18 +2022,19 @@ def register():
         password = request.form['password']
         email = request.form['email']
         confirm = request.form['confirm']
+        token = pyotp.random_base32()
 
         if password == confirm:
             salt = bcrypt.gensalt(rounds=16)
             hash_password = bcrypt.hashpw(password.encode(), salt)
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s)', (username, hash_password, email, "Some Keys"))
+            cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s, %s)', (username, hash_password, email, "Some Keys", token))
             mysql.connection.commit()
             msg = 'You have successfully registered!'
 
             cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
             customer = cursor.fetchone()
-            print(customer)
+            # print(customer)
             if customer:
                 hashAndSalt = customer['password']
                 if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
@@ -2106,19 +2049,6 @@ def register():
     return render_template('register.html', form=register_form)
 
 
-#@app.route('/forgetPassword', methods=['GET', 'POST'])
-#def forgetpassword():
-#    forgetpassword_form = ForgetPassword(request.form)
-#    if request.method == 'POST' and forgetpassword_form.validate():
-#        employees_dict = {'Anthony': 'password', 'Benny': 'password', 'Jumbo': 'password', 'Catherine': 'password'}
-#        if forgetpassword_form.login_id.data in employees_dict:
-#            print('Valid')
-#            return redirect(url_for('home'))
-#        else:
-#            print('Invalid')
-#    return render_template('forgetPassword.html', form=forgetpassword_form)
-
-
 @app.route('/forgetPassword', methods=['GET', 'POST'])
 def forgetpassword():
     forgetpassword_form = ForgetPassword(request.form)
@@ -2128,7 +2058,6 @@ def forgetpassword():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT username FROM customer WHERE username = %s', (username,))
         customer = cursor.fetchone()
-        print(customer)
         if customer:
             session['username'] = username
             print('Customer exist')

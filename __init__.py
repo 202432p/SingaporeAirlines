@@ -13,7 +13,7 @@ from flask_wtf import RecaptchaField
 
 from Forms import CreateEmployeeForm, CreateEmployerForm, CreateListingForm, CreateAirplanesForm, CreatePassengerForm, \
     CreateFlightForm, CreateMaintenanceForm, RegisterForm, LoginForm, FilterStatus, FilterRole, ChangePassword, \
-    BookTicketForm, ForgetPassword, ForgetPassword2
+    BookTicketForm, ForgetPassword, ForgetPassword2, ResetPassword, ResetPassword2
 
 from datetime import date, datetime, timedelta
 
@@ -30,7 +30,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Cat1goesmeow'
+app.config['MYSQL_PASSWORD'] = 'Fccfxx322399'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -1410,6 +1410,55 @@ def retrieve_passengers():
         return render_template('retrieveCustomer.html', count=len(passengers_list), passengers_list=passengers_list)
 
 
+# @app.route('/updatePassenger/<int:id>/', methods=['GET', 'POST'])
+# def update_customer(id):
+#     update_customer_form = CreatePassengerForm(request.form)
+#     if request.method == 'POST' and update_customer_form.validate():
+#
+#         passengers_dict = {}
+#         db = shelve.open('passenger.db', 'w')
+#         passengers_dict = db['Passengers']
+#
+#         passenger = passengers_dict.get(id)
+#         passenger.set_first_name(update_customer_form.first_name.data)
+#         passenger.set_last_name(update_customer_form.last_name.data)
+#         passenger.set_nric(update_customer_form.nric.data)
+#         passenger.set_phone_no(update_customer_form.phone_no.data)
+#         passenger.set_flight_no(update_customer_form.flight_no.data)
+#         passenger.set_seat_no(update_customer_form.seat_no.data)
+#         passenger.set_email(update_customer_form.email.data)
+#         passenger.set_gender(update_customer_form.gender.data)
+#         passenger.set_health_declaration(update_customer_form.health_declaration.data)
+#         passenger.set_pcr_test(update_customer_form.pcr_test.data)
+#         passenger.set_pre_book(update_customer_form.pre_book.data)
+#         passenger.set_remarks(update_customer_form.remarks.data)
+#
+#         db['Passengers'] = passengers_dict
+#         db.close()
+#         return redirect(url_for('user_home'))
+#     else:
+#         passengers_dict = {}
+#         db = shelve.open('passenger.db', 'r')
+#         passengers_dict = db['Passengers']
+#         db.close()
+#
+#         passenger = passengers_dict.get(id)
+#         update_customer_form.first_name.data = passenger.get_first_name()
+#         update_customer_form.last_name.data = passenger.get_last_name()
+#         update_customer_form.nric.data = passenger.get_nric()
+#         update_customer_form.phone_no.data = passenger.get_phone_no()
+#         update_customer_form.email.data = passenger.get_email()
+#         update_customer_form.flight_no.data = passenger.get_flight_no()
+#         update_customer_form.seat_no.data = passenger.get_seat_no()
+#         update_customer_form.gender.data = passenger.get_gender()
+#         update_customer_form.health_declaration.data = passenger.get_health_declaration()
+#         update_customer_form.pcr_test.data = passenger.get_pcr_test()
+#         update_customer_form.pre_book.data = passenger.get_pre_book()
+#         update_customer_form.remarks.data = passenger.get_remarks()
+#
+#         return render_template('updateCustomer.html', form=update_customer_form)
+
+
 @app.route('/updatePassenger/', methods=['GET', 'POST'])
 def update_customer():
 
@@ -1417,6 +1466,7 @@ def update_customer():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
     if request.method == 'POST' and update_customer_form.validate():
+        print('meow1')
         first_name = request.form['first_name']
         last_name = request.form['last_name']
         nric = request.form['nric']
@@ -1427,6 +1477,7 @@ def update_customer():
         pcr_test = request.form['pcr_test']
         pre_book = request.form['pre_book']
         cursor.execute('UPDATE customer SET gender=%s , first_name=%s , last_name=%s , health_declaration=%s , pcr_test=%s , pre_book=%s , NRIC=%s , email=%s , phone_no=%s WHERE customer_id=%s',(gender, first_name, last_name, health_declaration, pcr_test, pre_book, nric, email, phone_no, session['customer_id']))
+        print('meow')
         mysql.connection.commit()
         return redirect(url_for('user_home'))
 
@@ -1888,28 +1939,26 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        if username == 'Benny' and password == 'Pa$$w0rd':
-            session['admin_id'] = '1'
-            session['username'] = username
-            session.permanent = True
-            return redirect(url_for('admin_home'))
-        else:
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
-            customer = cursor.fetchone()
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
+        customer = cursor.fetchone()
 
         if customer:
-            hashAndSalt = customer['password']
-            if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
-                # Create session data, we can access this data in other routes
-                session['customer_id'] = customer['customer_id']
-                session['username'] = customer['username']
-                session.permanent = True
+            cursor.execute('SELECT (CURRENT_DATE - date) as password_age FROM passwordhistory WHERE username = %s', (username,))
+            password_date = cursor.fetchone()
+            if int(str(password_date['password_age'])) >= 122 :
+                return redirect(url_for('resetpassword'))
+            elif int(str(password_date['password_age'])) >= 0 and int(str(password_date['password_age'])) < 122 :
+                hashAndSalt = customer['password']
+                if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
+                    # Create session data, we can access this data in other routes
+                    session['customer_id'] = customer['customer_id']
+                    session['username'] = customer['username']
+                    session.permanent = True
                 # return 'Logged in successfully!'
                 # return redirect(url_for('user_home'))
                 return redirect(url_for('login_2fa'))
-            else:
-                flash('Incorrect username or password.')
         else:
             flash('Incorrect username or password.')
     return render_template('login.html', form=login_form)
@@ -1956,27 +2005,38 @@ def register():
         email = request.form['email']
         confirm = request.form['confirm']
         token = pyotp.random_base32()
+        today = date.today()
+
 
         if password == confirm:
-            salt = bcrypt.gensalt(rounds=16)
-            hash_password = bcrypt.hashpw(password.encode(), salt)
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s, %s)', (username, hash_password, email, "Some Keys", token))
-            mysql.connection.commit()
-            msg = 'You have successfully registered!'
+            cursor.execute('SELECT * FROM customer WHERE username = %s OR email = %s ', [username, email])
+            checkaccount = cursor.fetchone()
+            if checkaccount:
+                flash("Account already exists")
+            else:
+                salt = bcrypt.gensalt(rounds=16)
+                hash_password = bcrypt.hashpw(password.encode(), salt)
+                cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s, %s)', (username, hash_password, email, "Some Keys", token))
+                mysql.connection.commit()
+                cursor.execute('INSERT INTO passwordhistory ( customer_id, username, new_password ) SELECT customer_id, username, password FROM customer')
+                mysql.connection.commit()
+                msg = 'You have successfully registered!'
 
-            cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
-            customer = cursor.fetchone()
-            # print(customer)
-            if customer:
-                hashAndSalt = customer['password']
-                if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
-                    # Create session data, we can access this data in other routes
-                    session['loggedin'] = True
-                    session['customer_id'] = customer['customer_id']
-                    session['username'] = customer['username']
-                # return 'Logged in successfully!'
-                return redirect(url_for('update_customer'))
+                cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
+                customer = cursor.fetchone()
+                cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s', (today.strftime("%Y-%m-%d"), username))
+                mysql.connection.commit()
+                # print(customer)
+                if customer:
+                    hashAndSalt = customer['password']
+                    if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
+                        # Create session data, we can access this data in other routes
+                        session['loggedin'] = True
+                        session['customer_id'] = customer['customer_id']
+                        session['username'] = customer['username']
+                    # return 'Logged in successfully!'
+                    return redirect(url_for('update_customer'))
         else:
             flash('Passwords do not match.') #Make a notification of this message, this is printed in python right now
     return render_template('register.html', form=register_form)
@@ -2007,17 +2067,146 @@ def forgetpassword2():
     if request.method == 'POST' and forgetpassword2_form.validate():
         password = request.form['password']
         confirm = request.form['confirm']
-
         if password == confirm:
-            salt = bcrypt.gensalt(rounds=16)
-            hash_password = bcrypt.hashpw(password.encode(), salt)
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('UPDATE customer set password = %s WHERE username = %s', (hash_password, session['username']))
-            mysql.connection.commit()
-            session.pop('username', None)
-            return redirect(url_for('login'))
+            cursor.execute('SELECT new_password, old_password FROM passwordhistory WHERE username = %s', [session['username']])
+            passwordhistory = cursor.fetchone()
+            oldhashAndSalt = passwordhistory['old_password']
+            newhashAndSalt = passwordhistory['new_password']
+            today = date.today()
+            if passwordhistory:
+                if oldhashAndSalt != None and newhashAndSalt != None:
+                    if bcrypt.checkpw(password.encode(), oldhashAndSalt.encode()) or bcrypt.checkpw(password.encode(), newhashAndSalt.encode()):
+                        flash("Please enter another password.")
+                    else:
+                        salt = bcrypt.gensalt(rounds=16)
+                        hash_password = bcrypt.hashpw(password.encode(), salt)
+                        cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s',
+                                       (hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute(
+                            'UPDATE passwordhistory SET old_password = new_password WHERE username = %s ',
+                            [session['username']])
+                        mysql.connection.commit()
+                        cursor.execute(
+                            'UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s',
+                            (hash_password, hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s',
+                                       (today.strftime("%Y-%m-%d"), session['username']))
+                        mysql.connection.commit()
+                        session.pop('username', None)
+                        return redirect(url_for('login'))
+                elif oldhashAndSalt == None and newhashAndSalt != None:
+                    if bcrypt.checkpw(password.encode(), newhashAndSalt.encode()):
+                        flash("Please enter another password.")
+                    else:
+                        salt = bcrypt.gensalt(rounds=16)
+                        hash_password = bcrypt.hashpw(password.encode(), salt)
+                        cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s', (hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET old_password = new_password WHERE username = %s ', [session['username']])
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s', (hash_password, hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s',
+                                       (today.strftime("%Y-%m-%d"), session['username']))
+                        mysql.connection.commit()
+                        session.pop('username', None)
+                        return redirect(url_for('login'))
 
     return render_template('forgetPassword2.html', form=forgetpassword2_form)
+
+
+@app.route('/resetPassword', methods=['GET', 'POST'])
+def resetpassword():
+    resetpassword_form = ResetPassword(request.form)
+    if request.method == 'POST' and resetpassword_form.validate():
+        username = request.form['login_id']
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT username FROM customer WHERE username = %s', (username,))
+        customer = cursor.fetchone()
+        if customer:
+            cursor.execute('SELECT (CURRENT_DATE - date) as password_age FROM passwordhistory WHERE username = %s', (username,))
+            password_date = cursor.fetchone()
+            if int(str(password_date['password_age'])) < 7:
+                flash("You cannot reset your password.")
+            elif int(str(password_date['password_age'])) >= 122:
+                session['username'] = username
+                return redirect(url_for('resetpassword2'))
+        else:
+            print('Customer does not exist')
+
+    return render_template('resetPassword.html', form=resetpassword_form)
+
+
+@app.route('/resetPassword2', methods=['GET', 'POST'])
+def resetpassword2():
+    resetpassword2_form = ResetPassword2(request.form)
+    if request.method == 'POST' and resetpassword2_form.validate():
+        password = request.form['password']
+        confirm = request.form['confirm']
+        if password == confirm:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT new_password, old_password, date FROM passwordhistory WHERE username = %s', [session['username']])
+            passwordhistory = cursor.fetchone()
+            oldhashAndSalt = passwordhistory['old_password']
+            newhashAndSalt = passwordhistory['new_password']
+            today = date.today()
+            if passwordhistory:
+                if oldhashAndSalt != None and newhashAndSalt != None:
+                    if bcrypt.checkpw(password.encode(), oldhashAndSalt.encode()) or bcrypt.checkpw(password.encode(), newhashAndSalt.encode()):
+                        flash("Please enter another password.")
+                    else:
+                        salt = bcrypt.gensalt(rounds=16)
+                        hash_password = bcrypt.hashpw(password.encode(), salt)
+                        cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s', (hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET old_password = new_password WHERE username = %s ', [session['username']])
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s', (hash_password, hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s', (today.strftime("%Y-%m-%d"), session['username']))
+                        mysql.connection.commit()
+                        session.pop('username', None)
+                        return redirect(url_for('login'))
+                elif oldhashAndSalt == None and newhashAndSalt != None:
+                    if bcrypt.checkpw(password.encode(), newhashAndSalt.encode()):
+                        flash("Please enter another password.")
+                    else:
+                        salt = bcrypt.gensalt(rounds=16)
+                        hash_password = bcrypt.hashpw(password.encode(), salt)
+                        cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s', (hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET old_password = new_password WHERE username = %s ', [session['username']])
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s', (hash_password, hash_password, hash_password, session['username']))
+                        mysql.connection.commit()
+                        cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s', (today.strftime("%Y-%m-%d"), session['username']))
+                        mysql.connection.commit()
+                        session.pop('username', None)
+                        return redirect(url_for('login'))
+
+    return render_template('resetPassword2.html', form=resetpassword2_form)
+
+# @app.route('/forgetPassword2', methods=['GET', 'POST'])
+# def forgetpassword2():
+#     forgetpassword2_form = ForgetPassword2(request.form)
+#     if request.method == 'POST' and forgetpassword2_form.validate():
+#         password = request.form['password']
+#         confirm = request.form['confirm']
+#
+#         if password == confirm:
+#             salt = bcrypt.gensalt(rounds=16)
+#             hash_password = bcrypt.hashpw(password.encode(), salt)
+#             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+#             cursor.execute('UPDATE customer set password = %s WHERE username = %s ', (hash_password, session['username']))
+#             mysql.connection.commit()
+#             session.pop('username', None)
+#             return redirect(url_for('login'))
+#
+#     return render_template('forgetPassword2.html', form=forgetpassword2_form)
 
 
 @app.errorhandler(404)
@@ -2026,5 +2215,5 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    # app.run()
-    app.run(ssl_context='adhoc')
+    app.run()
+    # app.run(ssl_context='adhoc')

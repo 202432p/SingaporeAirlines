@@ -61,6 +61,16 @@
                                 </div>
                                 <h6 class="h5 mb-0">Singapore Airline</h6>
                                 <p class="text-muted mt-2 mb-5">Register with us today</p>
+                                {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                                <span>{{ message }}</span>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endwith %}
                                 <form  method="POST" action="{{ url_for('register') }}" autocomplete="off">
                                     <div class="form-group" style="padding: 5px;">
                                       {{ render_field(form.username, class="form-control") }}

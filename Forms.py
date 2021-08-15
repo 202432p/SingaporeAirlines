@@ -172,7 +172,7 @@ class BookTicketForm(Form):
 class RegisterForm(Form):
     username = StringField('Username', [validators.DataRequired(), validators.Length(min=1, max=150)])
     email = StringField('E-mail', [validators.DataRequired(), validators.Length(min=1, max=150)])
-    password = StringField('Password',  [validators.DataRequired(), validators.EqualTo('confirm'), validators.Regexp('(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})', message="Password must contain at least one lowercase letter, one uppercase letter, one digit, one special character, and at least eight characters long.")],  widget=PasswordInput(hide_value=False))
+    password = StringField('Password',  [validators.DataRequired(), validators.EqualTo('confirm'), validators.Regexp('(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Z0-9])(?=.{8,})', message="Password must contain one uppercase letter, one digit, one special character and at least eight characters long")],  widget=PasswordInput(hide_value=False))
     confirm = StringField('Confirm Password', [validators.DataRequired()], widget=PasswordInput(hide_value=False))
     recaptcha = RecaptchaField()
 
@@ -189,7 +189,16 @@ class ForgetPassword(Form):
 
 
 class ForgetPassword2(Form):
-    password = StringField('Password', [validators.DataRequired(), validators.EqualTo('confirm')], widget=PasswordInput(hide_value=False))
+    password = StringField('Password', [validators.DataRequired(), validators.EqualTo('confirm'), validators.Regexp('(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Z0-9])(?=.{8,})', message="Password must contain one uppercase letter, one digit, one special character and at least eight characters long")], widget=PasswordInput(hide_value=False))
+    confirm = StringField('Confirm Password', [validators.DataRequired()] , widget=PasswordInput(hide_value=False) )
+
+class ResetPassword(Form):
+    login_id = StringField('Login id', [validators.DataRequired(), validators.Length(min=1, max=150)])
+    recaptcha = RecaptchaField()
+
+
+class ResetPassword2(Form):
+    password = StringField('Password', [validators.DataRequired(), validators.EqualTo('confirm'), validators.Regexp('(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Z0-9])(?=.{8,})', message="Password must contain one uppercase letter, one digit, one special character and at least eight characters long")], widget=PasswordInput(hide_value=False))
     confirm = StringField('Confirm Password', [validators.DataRequired()] , widget=PasswordInput(hide_value=False) )
 
 

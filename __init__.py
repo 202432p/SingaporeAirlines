@@ -1939,15 +1939,9 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        if username == 'Benny' and password == 'Pa$$w0rd':
-            session['admin_id'] = '1'
-            session['adminname'] = username
-            session.permanent = True
-            return redirect(url_for('admin_home'))
-        else:
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
-            customer = cursor.fetchone()
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
+        customer = cursor.fetchone()
 
         if customer:
             cursor.execute('SELECT (CURRENT_DATE - date) as password_age FROM passwordhistory WHERE username = %s', (username,))
@@ -1967,7 +1961,10 @@ def login():
             else:
                 flash('Incorrect username or password.')
         else:
+            cursor.execute('INSERT INTO audit VALUES (NULL, %s ,%s, now())', (username, 'Incorrect Username'))
+            mysql.connection.commit()
             flash('Incorrect username or password.')
+
     return render_template('login.html', form=login_form)
 
 
@@ -2074,6 +2071,7 @@ def forgetpassword2():
     if request.method == 'POST' and forgetpassword2_form.validate():
         password = request.form['password']
         confirm = request.form['confirm']
+
         if password == confirm:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute('SELECT new_password, old_password FROM passwordhistory WHERE username = %s', [session['username']])
@@ -2187,24 +2185,6 @@ def resetpassword2():
 
     return render_template('resetPassword2.html', form=resetpassword2_form)
 
-
-# @app.route('/forgetPassword2', methods=['GET', 'POST'])
-# def forgetpassword2():
-#     forgetpassword2_form = ForgetPassword2(request.form)
-#     if request.method == 'POST' and forgetpassword2_form.validate():
-#         password = request.form['password']
-#         confirm = request.form['confirm']
-#
-#         if password == confirm:
-#             salt = bcrypt.gensalt(rounds=16)
-#             hash_password = bcrypt.hashpw(password.encode(), salt)
-#             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#             cursor.execute('UPDATE customer set password = %s WHERE username = %s ', (hash_password, session['username']))
-#             mysql.connection.commit()
-#             session.pop('username', None)
-#             return redirect(url_for('login'))
-#
-#     return render_template('forgetPassword2.html', form=forgetpassword2_form)
 
 
 @app.errorhandler(404)

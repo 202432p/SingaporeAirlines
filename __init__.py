@@ -30,7 +30,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Fccfxx322399'
+app.config['MYSQL_PASSWORD'] = 'Cat1goesmeow'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -1939,19 +1939,24 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
-        customer = cursor.fetchone()
+        if username == 'Benny' and password == 'Pa$$w0rd':
+            session['admin_id'] = '1'
+            session['adminname'] = username
+            session.permanent = True
+            return redirect(url_for('admin_home'))
+        else:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
+            customer = cursor.fetchone()
 
         if customer:
             cursor.execute('SELECT (CURRENT_DATE - date) as password_age FROM passwordhistory WHERE username = %s', (username,))
             password_date = cursor.fetchone()
-            if int(str(password_date['password_age'])) >= 122 :
-                return redirect(url_for('resetpassword'))
-            elif int(str(password_date['password_age'])) >= 0 and int(str(password_date['password_age'])) < 122 :
-                hashAndSalt = customer['password']
-                if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
+            hashAndSalt = customer['password']
+            if bcrypt.checkpw(password.encode(), hashAndSalt.encode()):
+                if int(str(password_date['password_age'])) >= 122 :
+                    return redirect(url_for('resetpassword'))
+                elif 0 <= int(str(password_date['password_age'])) < 122:
                     # Create session data, we can access this data in other routes
                     session['customer_id'] = customer['customer_id']
                     session['username'] = customer['username']
@@ -1959,6 +1964,8 @@ def login():
                 # return 'Logged in successfully!'
                 # return redirect(url_for('user_home'))
                 return redirect(url_for('login_2fa'))
+            else:
+                flash('Incorrect username or password.')
         else:
             flash('Incorrect username or password.')
     return render_template('login.html', form=login_form)
@@ -2083,15 +2090,12 @@ def forgetpassword2():
                         hash_password = bcrypt.hashpw(password.encode(), salt)
                         cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s',
                                        (hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute(
                             'UPDATE passwordhistory SET old_password = new_password WHERE username = %s ',
                             [session['username']])
-                        mysql.connection.commit()
                         cursor.execute(
                             'UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s',
                             (hash_password, hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s',
                                        (today.strftime("%Y-%m-%d"), session['username']))
                         mysql.connection.commit()
@@ -2104,11 +2108,8 @@ def forgetpassword2():
                         salt = bcrypt.gensalt(rounds=16)
                         hash_password = bcrypt.hashpw(password.encode(), salt)
                         cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s', (hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET old_password = new_password WHERE username = %s ', [session['username']])
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s', (hash_password, hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s',
                                        (today.strftime("%Y-%m-%d"), session['username']))
                         mysql.connection.commit()
@@ -2130,9 +2131,11 @@ def resetpassword():
         if customer:
             cursor.execute('SELECT (CURRENT_DATE - date) as password_age FROM passwordhistory WHERE username = %s', (username,))
             password_date = cursor.fetchone()
-            if int(str(password_date['password_age'])) < 7:
+            if int(password_date['password_age']) < 7:
+            # if int(password_date['password_age']) < 0:
                 flash("You cannot reset your password.")
-            elif int(str(password_date['password_age'])) >= 122:
+            elif int(password_date['password_age']) >= 122:
+            # elif int(password_date['password_age']) >= 0:
                 session['username'] = username
                 return redirect(url_for('resetpassword2'))
         else:
@@ -2162,11 +2165,8 @@ def resetpassword2():
                         salt = bcrypt.gensalt(rounds=16)
                         hash_password = bcrypt.hashpw(password.encode(), salt)
                         cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s', (hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET old_password = new_password WHERE username = %s ', [session['username']])
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s', (hash_password, hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s', (today.strftime("%Y-%m-%d"), session['username']))
                         mysql.connection.commit()
                         session.pop('username', None)
@@ -2178,17 +2178,15 @@ def resetpassword2():
                         salt = bcrypt.gensalt(rounds=16)
                         hash_password = bcrypt.hashpw(password.encode(), salt)
                         cursor.execute('UPDATE customer SET password = %s WHERE %s != password AND username = %s', (hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET old_password = new_password WHERE username = %s ', [session['username']])
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET new_password = %s WHERE %s != old_password AND %s != new_password AND username = %s', (hash_password, hash_password, hash_password, session['username']))
-                        mysql.connection.commit()
                         cursor.execute('UPDATE passwordhistory SET date = %s WHERE username = %s', (today.strftime("%Y-%m-%d"), session['username']))
                         mysql.connection.commit()
                         session.pop('username', None)
                         return redirect(url_for('login'))
 
     return render_template('resetPassword2.html', form=resetpassword2_form)
+
 
 # @app.route('/forgetPassword2', methods=['GET', 'POST'])
 # def forgetpassword2():
@@ -2215,5 +2213,5 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    app.run()
-    # app.run(ssl_context='adhoc')
+    # app.run()
+    app.run(ssl_context='adhoc')

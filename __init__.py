@@ -1950,9 +1950,11 @@ def login():
                 session['customer_id'] = customer['customer_id']
                 session['username'] = customer['username']
                 session.permanent = True
-            # return 'Logged in successfully!'
-            # return redirect(url_for('user_home'))
-            return redirect(url_for('login_2fa'))
+                # return 'Logged in successfully!'
+                # return redirect(url_for('user_home'))
+                return redirect(url_for('login_2fa'))
+            else:
+                flash('Incorrect username or password.')
         else:
             flash('Incorrect username or password.')
     return render_template('login.html', form=login_form)

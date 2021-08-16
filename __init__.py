@@ -30,7 +30,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Cat1goesmeow'
+app.config['MYSQL_PASSWORD'] = 'Saythename17'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -62,7 +62,18 @@ def user_home():
 
 @app.route('/adminHome')
 def admin_home():
-    return render_template('index2.html')
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM audit WHERE wrong_login_id = 1')
+    audit1 = cursor.fetchone()
+    cursor.execute('SELECT * FROM audit WHERE wrong_login_id = 2')
+    audit2 = cursor.fetchone()
+    cursor.execute('SELECT * FROM audit WHERE wrong_login_id = 3')
+    audit3 = cursor.fetchone()
+    cursor.execute('SELECT * FROM audit WHERE wrong_login_id = 4')
+    audit4 = cursor.fetchone()
+    cursor.execute('SELECT * FROM audit WHERE wrong_login_id = 5')
+    audit5 = cursor.fetchone()
+    return render_template('index2.html', audit1=audit1, audit2=audit2, audit3=audit3, audit4=audit4, audit5=audit5)
 
 
 @app.route('/companyHome')
@@ -1938,10 +1949,15 @@ def login():
     if request.method == 'POST' and login_form.validate():
         username = request.form['username']
         password = request.form['password']
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
-        customer = cursor.fetchone()
+        if username == 'Benny' and password == 'Pa$$w0rd':
+            session['admin_id'] = '1'
+            session['adminname'] = username
+            session.permanent = True
+            return redirect(url_for('admin_home'))
+        else:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT * FROM customer WHERE username = %s', (username,))
+            customer = cursor.fetchone()
 
         if customer:
             cursor.execute('SELECT (CURRENT_DATE - date) as password_age FROM passwordhistory WHERE username = %s', (username,))
@@ -1955,6 +1971,8 @@ def login():
                     session['customer_id'] = customer['customer_id']
                     session['username'] = customer['username']
                     session.permanent = True
+                    cursor.execute('INSERT INTO audit VALUES (NULL, %s ,%s, now())', (username, 'Successful Login'))
+                    mysql.connection.commit()
                 # return 'Logged in successfully!'
                 # return redirect(url_for('user_home'))
                 return redirect(url_for('login_2fa'))
@@ -2024,6 +2042,7 @@ def register():
                 cursor.execute('INSERT INTO customer VALUES (NULL, %s, %s, NULL, NULL, NULL, NULL, NULL, NULL, NULL, %s, NULL, %s, %s)', (username, hash_password, email, "Some Keys", token))
                 mysql.connection.commit()
                 cursor.execute('INSERT INTO passwordhistory ( customer_id, username, new_password ) SELECT customer_id, username, password FROM customer')
+                cursor.execute('INSERT INTO audit VALUES (NULL, %s ,%s, now())', (username, 'Successful Registration'))
                 mysql.connection.commit()
                 msg = 'You have successfully registered!'
 
@@ -2193,5 +2212,5 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    # app.run()
-    app.run(ssl_context='adhoc')
+    app.run()
+    # app.run(ssl_context='adhoc')

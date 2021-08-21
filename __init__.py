@@ -30,7 +30,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Saythename17'
+app.config['MYSQL_PASSWORD'] = 'Cat1goesmeow'
 app.config['MYSQL_DB'] = 'sia'
 
 mysql = MySQL(app)
@@ -2028,7 +2028,6 @@ def register():
         confirm = request.form['confirm']
         token = pyotp.random_base32()
         today = date.today()
-
 
         if password == confirm:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
